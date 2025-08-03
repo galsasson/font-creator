@@ -65,15 +65,14 @@ class App {
     
     setupPreviewArea() {
         const textArea = document.getElementById('preview-text');
-        const canvas = document.getElementById('preview-canvas');
-        this.previewArea = new PreviewArea(textArea, canvas);
+        this.previewArea = new PreviewArea(textArea);
     }
     
     bindEvents() {
         // Create font button
         const createBtn = document.getElementById('create-font');
-        createBtn.addEventListener('click', () => {
-            this.createFont();
+        createBtn.addEventListener('click', async () => {
+            await this.createFont();
         });
         
         // Export buttons
@@ -112,7 +111,7 @@ class App {
         });
     }
     
-    createFont() {
+    async createFont() {
         // Clear previous font data
         this.fontGenerator.glyphs.clear();
         
@@ -136,7 +135,7 @@ class App {
         const font = this.fontGenerator.generateFont(fontName, author);
         
         // Enable preview
-        this.previewArea.setFont(font);
+        await this.previewArea.setFont(font);
         
         // Enable export buttons
         document.getElementById('download-ttf').disabled = false;
