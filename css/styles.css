@@ -1,0 +1,286 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    height: 100vh;
+    gap: 1px;
+    background-color: #ccc;
+}
+
+/* Section styling */
+section {
+    background-color: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Input Section */
+.input-section {
+    overflow-y: auto;
+}
+
+.toolbar {
+    margin-bottom: 20px;
+}
+
+.drawing-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.tool {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.tool:hover {
+    background-color: #f5f5f5;
+}
+
+.tool.active {
+    background-color: #007AFF;
+    border-color: #007AFF;
+}
+
+.tool.active svg {
+    fill: white;
+}
+
+.tool svg {
+    fill: #666;
+}
+
+.stroke-width {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.stroke-width label {
+    font-size: 14px;
+    color: #666;
+}
+
+.stroke-width input[type="range"] {
+    width: 100px;
+}
+
+#width-value {
+    font-size: 14px;
+    color: #666;
+    min-width: 20px;
+}
+
+.characters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.char-box {
+    text-align: center;
+}
+
+.char-label {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #666;
+}
+
+.char-canvas {
+    border: 2px solid #ddd;
+    background-color: #fff;
+    cursor: crosshair;
+    border-radius: 4px;
+    display: block;
+    margin: 0 auto;
+}
+
+.char-canvas:hover {
+    border-color: #999;
+}
+
+.create-button {
+    padding: 12px 30px;
+    background-color: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background-color 0.2s;
+}
+
+.create-button:hover:not(:disabled) {
+    background-color: #0051D5;
+}
+
+.create-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Preview Section */
+.preview-section {
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+}
+
+#preview-text {
+    flex: 1;
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.6;
+    resize: none;
+    font-family: inherit;
+}
+
+#preview-text:disabled {
+    background-color: #f9f9f9;
+    color: #999;
+}
+
+#preview-canvas {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Export Section */
+.export-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.export-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background-color: #fff;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.export-button:hover:not(:disabled) {
+    background-color: #f5f5f5;
+    border-color: #999;
+}
+
+.export-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.export-button svg {
+    fill: #666;
+}
+
+.font-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.font-info input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.font-info input:focus {
+    outline: none;
+    border-color: #007AFF;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .app-container {
+        grid-template-columns: 1fr 1fr 200px;
+    }
+}
+
+@media (max-width: 900px) {
+    .app-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr auto;
+    }
+    
+    section {
+        border: none !important;
+    }
+}

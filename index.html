@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFont - Create Your Own Typeface</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Character Input Section -->
+        <section class="input-section">
+            <div class="toolbar">
+                <h2>Draw Characters</h2>
+                <div class="drawing-tools">
+                    <button id="pen-tool" class="tool active" data-tool="pen">
+                        <svg width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                    </button>
+                    <button id="eraser-tool" class="tool" data-tool="eraser">
+                        <svg width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M15.14 3c-.51-.51-1.35-.51-1.86 0L2.5 13.78c-.51.51-.51 1.35 0 1.86l2.86 2.86c.51.51 1.35.51 1.86 0L18 7.72c.51-.51.51-1.35 0-1.86L15.14 3z"/>
+                        </svg>
+                    </button>
+                    <div class="stroke-width">
+                        <label>Width:</label>
+                        <input type="range" id="stroke-width" min="1" max="10" value="3">
+                        <span id="width-value">3</span>
+                    </div>
+                </div>
+            </div>
+            <div class="characters-grid" id="characters-grid">
+                <!-- Character boxes will be dynamically generated -->
+            </div>
+            <button id="create-font" class="create-button">Create Font</button>
+        </section>
+
+        <!-- Preview Section -->
+        <section class="preview-section">
+            <h2>Test Your Font</h2>
+            <textarea id="preview-text" placeholder="Type here to test your font..." disabled>
+The quick brown fox jumps over the lazy dog.
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789
+            </textarea>
+            <canvas id="preview-canvas" style="display: none;"></canvas>
+        </section>
+
+        <!-- Export Section -->
+        <section class="export-section">
+            <h2>Export</h2>
+            <div class="export-buttons">
+                <button id="download-ttf" class="export-button" disabled>
+                    <svg width="20" height="20" viewBox="0 0 20 20">
+                        <path d="M10 15l-5-5h3V5h4v5h3l-5 5zm-5 2v2h10v-2H5z"/>
+                    </svg>
+                    Download TTF
+                </button>
+                <button id="download-otf" class="export-button" disabled>
+                    <svg width="20" height="20" viewBox="0 0 20 20">
+                        <path d="M10 15l-5-5h3V5h4v5h3l-5 5zm-5 2v2h10v-2H5z"/>
+                    </svg>
+                    Download OTF
+                </button>
+            </div>
+            <div class="font-info">
+                <input type="text" id="font-name" placeholder="Font Name" value="MyCustomFont">
+                <input type="text" id="font-author" placeholder="Author Name" value="Anonymous">
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
