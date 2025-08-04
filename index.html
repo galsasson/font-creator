@@ -37,37 +37,40 @@
             <button id="create-font" class="create-button">Create Font</button>
         </section>
 
-        <!-- Preview Section -->
-        <section class="preview-section">
-            <h2>Test Your Font</h2>
-            <textarea id="preview-text" placeholder="Type here to test your font...">
+        <!-- Bottom Section -->
+        <section class="bottom-section">
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h2>Test Your Font</h2>
+                <textarea id="preview-text" placeholder="Type here to test your font...">
 The quick brown fox jumps over the lazy dog.
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 abcdefghijklmnopqrstuvwxyz
 0123456789
-            </textarea>
-        </section>
-
-        <!-- Export Section -->
-        <section class="export-section">
-            <h2>Export</h2>
-            <div class="export-buttons">
-                <button id="download-ttf" class="export-button" disabled>
-                    <svg width="20" height="20" viewBox="0 0 20 20">
-                        <path d="M10 15l-5-5h3V5h4v5h3l-5 5zm-5 2v2h10v-2H5z"/>
-                    </svg>
-                    Download TTF
-                </button>
-                <button id="download-otf" class="export-button" disabled>
-                    <svg width="20" height="20" viewBox="0 0 20 20">
-                        <path d="M10 15l-5-5h3V5h4v5h3l-5 5zm-5 2v2h10v-2H5z"/>
-                    </svg>
-                    Download OTF
-                </button>
+                </textarea>
             </div>
-            <div class="font-info">
-                <input type="text" id="font-name" placeholder="Font Name" value="MyCustomFont">
-                <input type="text" id="font-author" placeholder="Author Name" value="Anonymous">
+
+            <!-- Export Section -->
+            <div class="export-section">
+                <h2>Export</h2>
+                <div class="export-buttons">
+                    <button id="download-ttf" class="export-button" disabled>
+                        <svg width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M10 15l-5-5h3V5h4v5h3l-5 5zm-5 2v2h10v-2H5z"/>
+                        </svg>
+                        Download TTF
+                    </button>
+                    <button id="download-otf" class="export-button" disabled>
+                        <svg width="20" height="20" viewBox="0 0 20 20">
+                            <path d="M10 15l-5-5h3V5h4v5h3l-5 5zm-5 2v2h10v-2H5z"/>
+                        </svg>
+                        Download OTF
+                    </button>
+                </div>
+                <div class="font-info">
+                    <input type="text" id="font-name" placeholder="Font Name" value="MyCustomFont">
+                    <input type="text" id="font-author" placeholder="Author Name" value="Anonymous">
+                </div>
             </div>
         </section>
     </div>
