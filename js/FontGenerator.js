@@ -9,14 +9,14 @@ export class FontGenerator {
     }
     
     addCharacter(charData) {
-        const { character, paths, canvas, imageData } = charData;
+        const { character, canvas, imageData } = charData;
         
         // Calculate bounding box
         const bounds = this.calculateBounds(imageData);
         if (!bounds) return; // Empty character
         
-        // Convert canvas paths to font paths
-        const fontPaths = this.convertToFontPaths(paths, canvas, bounds);
+        // Convert canvas bitmap to font paths
+        const fontPaths = this.convertToFontPaths(null, canvas, bounds);
         
         // Calculate metrics
         const metrics = this.calculateMetrics(character, bounds, canvas);
@@ -54,52 +54,205 @@ export class FontGenerator {
         const scale = this.unitsPerEm / canvas.height;
         const fontPaths = [];
         
-        paths.forEach(path => {
-            if (path.points.length < 2) return;
-            
-            const commands = [];
-            const firstPoint = path.points[0];
-            
-            // Normalize and scale coordinates
-            const x0 = (firstPoint.x - bounds.minX) * scale;
-            const y0 = (bounds.maxY - firstPoint.y) * scale; // Flip Y coordinate
-            
-            commands.push({ type: 'M', x: x0, y: y0 }); // moveTo
-            
-            // Convert to smooth curves
-            for (let i = 1; i < path.points.length; i++) {
-                const point = path.points[i];
-                const x = (point.x - bounds.minX) * scale;
-                const y = (bounds.maxY - point.y) * scale;
+        // Get the image data from the canvas
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const { data, width, height } = imageData;
+        
+        // Convert bitmap to paths
+        const bitmapPaths = this.bitmapToPaths(data, width, height, bounds, scale);
+        
+        return bitmapPaths;
+    }
+    
+    bitmapToPaths(imageData, width, height, bounds, scale) {
+        const paths = [];
+        const visited = new Set();
+        
+        // Find all connected components (drawn areas)
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const idx = (y * width + x) * 4;
+                const alpha = imageData[idx + 3];
                 
-                if (i < path.points.length - 1) {
-                    // Use quadratic curves for smoother lines
-                    const nextPoint = path.points[i + 1];
-                    const nextX = (nextPoint.x - bounds.minX) * scale;
-                    const nextY = (bounds.maxY - nextPoint.y) * scale;
-                    
-                    const cpX = x;
-                    const cpY = y;
-                    const endX = (x + nextX) / 2;
-                    const endY = (y + nextY) / 2;
-                    
-                    commands.push({ 
-                        type: 'Q', 
-                        x1: cpX, y1: cpY, 
-                        x2: endX, y2: endY 
-                    }); // quadraticCurveTo
-                } else {
-                    commands.push({ type: 'L', x: x, y: y }); // lineTo
+                if (alpha > 128 && !visited.has(`${x},${y}`)) {
+                    // Found a new connected component
+                    const component = this.floodFill(imageData, width, height, x, y, visited);
+                    if (component.length > 0) {
+                        const path = this.componentToPath(component, bounds, scale);
+                        if (path.commands.length > 0) {
+                            paths.push(path);
+                        }
+                    }
                 }
             }
+        }
+        
+        return paths;
+    }
+    
+    floodFill(imageData, width, height, startX, startY, visited) {
+        const component = [];
+        const stack = [{x: startX, y: startY}];
+        
+        while (stack.length > 0) {
+            const {x, y} = stack.pop();
+            const key = `${x},${y}`;
             
-            fontPaths.push({ 
-                commands: commands,
-                strokeWidth: path.width || 3 // Preserve original stroke width
-            });
+            if (visited.has(key)) continue;
+            visited.add(key);
+            
+            const idx = (y * width + x) * 4;
+            const alpha = imageData[idx + 3];
+            
+            if (alpha > 128) {
+                component.push({x, y});
+                
+                // Add neighbors
+                const neighbors = [
+                    {x: x + 1, y: y},
+                    {x: x - 1, y: y},
+                    {x: x, y: y + 1},
+                    {x: x, y: y - 1}
+                ];
+                
+                for (const neighbor of neighbors) {
+                    if (neighbor.x >= 0 && neighbor.x < width && 
+                        neighbor.y >= 0 && neighbor.y < height) {
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
+        
+        return component;
+    }
+    
+    componentToPath(component, bounds, scale) {
+        if (component.length === 0) return { commands: [] };
+        
+        // Create a bitmap representation of the component
+        const bitmap = this.createBitmap(component);
+        
+        // Trace the contour of the component
+        const contour = this.traceContour(bitmap);
+        
+        // Convert contour to font path
+        const commands = this.contourToPath(contour, bounds, scale);
+        
+        return { commands, strokeWidth: 1 };
+    }
+    
+    createBitmap(component) {
+        // Find bounds
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        component.forEach(pixel => {
+            minX = Math.min(minX, pixel.x);
+            minY = Math.min(minY, pixel.y);
+            maxX = Math.max(maxX, pixel.x);
+            maxY = Math.max(maxY, pixel.y);
         });
         
-        return fontPaths;
+        const width = maxX - minX + 1;
+        const height = maxY - minY + 1;
+        const bitmap = Array(height).fill().map(() => Array(width).fill(false));
+        
+        // Fill the bitmap
+        component.forEach(pixel => {
+            const x = pixel.x - minX;
+            const y = pixel.y - minY;
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                bitmap[y][x] = true;
+            }
+        });
+        
+        return { bitmap, minX, minY, width, height };
+    }
+    
+    traceContour(bitmapData) {
+        const { bitmap, minX, minY, width, height } = bitmapData;
+        const contour = [];
+        
+        // Find the first pixel on the left edge
+        let startX = 0, startY = 0;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                if (bitmap[y][x]) {
+                    startX = x;
+                    startY = y;
+                    break;
+                }
+            }
+            if (startX > 0) break;
+        }
+        
+        if (startX === 0) return contour;
+        
+        // Trace the contour using a simple algorithm
+        let x = startX, y = startY;
+        const directions = [
+            {dx: 1, dy: 0},   // right
+            {dx: 0, dy: 1},   // down
+            {dx: -1, dy: 0},  // left
+            {dx: 0, dy: -1}   // up
+        ];
+        let dir = 0;
+        
+        do {
+            contour.push({x: x + minX, y: y + minY});
+            
+            // Try to turn left
+            const leftDir = (dir + 3) % 4;
+            const leftDx = directions[leftDir].dx;
+            const leftDy = directions[leftDir].dy;
+            
+            if (y + leftDy >= 0 && y + leftDy < height && 
+                x + leftDx >= 0 && x + leftDx < width && 
+                bitmap[y + leftDy][x + leftDx]) {
+                dir = leftDir;
+                x += leftDx;
+                y += leftDy;
+            } else {
+                // Try to go straight
+                const dx = directions[dir].dx;
+                const dy = directions[dir].dy;
+                
+                if (y + dy >= 0 && y + dy < height && 
+                    x + dx >= 0 && x + dx < width && 
+                    bitmap[y + dy][x + dx]) {
+                    x += dx;
+                    y += dy;
+                } else {
+                    // Turn right
+                    dir = (dir + 1) % 4;
+                }
+            }
+        } while (!(x === startX && y === startY) && contour.length < width * height);
+        
+        return contour;
+    }
+    
+    contourToPath(contour, bounds, scale) {
+        if (contour.length < 3) return [];
+        
+        const commands = [];
+        
+        // Convert contour points to font coordinates
+        const fontPoints = contour.map(point => ({
+            x: (point.x - bounds.minX) * scale,
+            y: (bounds.maxY - point.y) * scale // Flip Y
+        }));
+        
+        // Create path from points
+        commands.push({ type: 'M', x: fontPoints[0].x, y: fontPoints[0].y });
+        
+        for (let i = 1; i < fontPoints.length; i++) {
+            commands.push({ type: 'L', x: fontPoints[i].x, y: fontPoints[i].y });
+        }
+        
+        commands.push({ type: 'Z' }); // closePath
+        
+        return commands;
     }
     
     calculateMetrics(character, bounds, canvas) {
@@ -227,33 +380,42 @@ export class FontGenerator {
         
         // Create glyphs for all characters
         this.glyphs.forEach((glyphData, character) => {
-            const path = new opentype.Path();
-            
-            // Convert our custom path format to opentype.js paths
-            glyphData.paths.forEach(p => {
-                if (p.commands) {
-                    p.commands.forEach(cmd => {
-                        if (cmd.type === 'M') {
-                            path.moveTo(cmd.x, cmd.y);
-                        } else if (cmd.type === 'L') {
-                            path.lineTo(cmd.x, cmd.y);
-                        } else if (cmd.type === 'Q') {
-                            path.quadraticCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2);
-                        } else if (cmd.type === 'C') {
-                            path.bezierCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.x3, cmd.y3);
-                        }
+            try {
+                const path = new opentype.Path();
+                
+                // Convert our custom path format to opentype.js paths
+                glyphData.paths.forEach(p => {
+                    if (p.commands && p.commands.length > 0) {
+                        p.commands.forEach(cmd => {
+                            if (cmd.type === 'M') {
+                                path.moveTo(cmd.x, cmd.y);
+                            } else if (cmd.type === 'L') {
+                                path.lineTo(cmd.x, cmd.y);
+                            } else if (cmd.type === 'Q') {
+                                path.quadraticCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2);
+                            } else if (cmd.type === 'C') {
+                                path.bezierCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.x3, cmd.y3);
+                            } else if (cmd.type === 'Z') {
+                                path.closePath();
+                            }
+                        });
+                    }
+                });
+                
+                // Only add glyph if path has valid content
+                if (path.commands && path.commands.length > 0) {
+                    const glyph = new opentype.Glyph({
+                        name: character,
+                        unicode: character.charCodeAt(0),
+                        advanceWidth: glyphData.advanceWidth,
+                        path: path
                     });
+                    
+                    glyphs.push(glyph);
                 }
-            });
-            
-            const glyph = new opentype.Glyph({
-                name: character,
-                unicode: character.charCodeAt(0),
-                advanceWidth: glyphData.advanceWidth,
-                path: path
-            });
-            
-            glyphs.push(glyph);
+            } catch (error) {
+                console.warn(`Failed to create glyph for character '${character}':`, error);
+            }
         });
         
         // Sort glyphs by unicode
