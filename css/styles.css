@@ -178,6 +178,32 @@ h2 {
     border-right: 1px solid #ddd;
 }
 
+.preview-controls {
+    margin-bottom: 15px;
+}
+
+.font-size-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.font-size-control label {
+    font-size: 14px;
+    color: #666;
+    min-width: 80px;
+}
+
+.font-size-control input[type="range"] {
+    width: 120px;
+}
+
+#font-size-value {
+    font-size: 14px;
+    color: #666;
+    min-width: 40px;
+}
+
 #preview-text {
     flex: 1;
     width: 100%;

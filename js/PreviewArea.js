@@ -4,6 +4,7 @@ export class PreviewArea {
         this.font = null;
         this.fontName = 'CustomFont';
         this.fontUrl = null;
+        this.fontSize = 24; // Default font size
         
         this.bindEvents();
     }
@@ -13,6 +14,18 @@ export class PreviewArea {
         window.addEventListener('resize', () => {
             // No canvas setup needed anymore
         });
+        
+        // Handle font size changes
+        const fontSizeInput = document.getElementById('font-size');
+        const fontSizeValue = document.getElementById('font-size-value');
+        
+        if (fontSizeInput && fontSizeValue) {
+            fontSizeInput.addEventListener('input', (e) => {
+                this.fontSize = parseInt(e.target.value);
+                fontSizeValue.textContent = `${this.fontSize}px`;
+                this.updateFontSize();
+            });
+        }
     }
     
     async setFont(font) {
@@ -54,7 +67,7 @@ export class PreviewArea {
             
             // Apply font to textarea
             this.textArea.style.fontFamily = this.fontName;
-            this.textArea.style.fontSize = '24px';
+            this.textArea.style.fontSize = `${this.fontSize}px`;
             this.textArea.style.lineHeight = '1.5';
             
             console.log('Font applied successfully:', this.fontName);
@@ -89,11 +102,28 @@ export class PreviewArea {
         document.head.appendChild(style);
     }
     
+    updateFontSize() {
+        if (this.textArea) {
+            this.textArea.style.fontSize = `${this.fontSize}px`;
+        }
+    }
+    
     reset() {
         this.font = null;
+        this.fontSize = 24; // Reset to default
         this.textArea.style.fontFamily = '';
         this.textArea.style.fontSize = '';
         this.textArea.style.lineHeight = '';
+        
+        // Reset font size control
+        const fontSizeInput = document.getElementById('font-size');
+        const fontSizeValue = document.getElementById('font-size-value');
+        if (fontSizeInput) {
+            fontSizeInput.value = this.fontSize;
+        }
+        if (fontSizeValue) {
+            fontSizeValue.textContent = `${this.fontSize}px`;
+        }
         
         // Remove custom font CSS
         const existingStyle = document.getElementById('custom-font-style');
